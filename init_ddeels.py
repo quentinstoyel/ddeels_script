@@ -143,12 +143,14 @@ def to_precision(x,p):
 
 class Ddeels_rounded_cube:
 
-    def __init__(self, dimension, roundedness, max_number_of_dipoles, angle, ratio, filename):
+    def __init__(self, dimension, roundedness, max_number_of_dipoles, angle, ratio, filename, graph):
         self.rotation_angle = angle #initializing everything to the class
         self.exp_factor = 2.0 / roundedness #centers the cube at origin
         self.max_value = dimension / 2.0
         self.ratio = ratio
         self.step_size = dimension / (float(max_number_of_dipoles)**(1.0 / 3))
+        self.filename = filename
+        self.graph = graph
         self.x_values = np.arange(-self.max_value,
                                   self.max_value, self.step_size / self.ratio)
         self.y_values = np.arange(-self.max_value,
@@ -179,7 +181,7 @@ class Ddeels_rounded_cube:
         storage_file = open('cube_storage.pos', 'w')
         dipole_count = 0  # counter to make sure we know how many dipoles we have
         self.make_rotation_matrix(self.rotation_angle)  # if tilting
-        if graph is True: #does this output a graph?
+        if self.graph is True: #does this output a graph?
             fig = plt.figure()
             ax = fig.add_subplot(111, projection='3d')
         for x in self.x_values:
@@ -193,9 +195,9 @@ class Ddeels_rounded_cube:
                             final_y, 8)) + "         " + str(to_precision(final_z, 8)) + "       1           1 \n" #what to write to file
                         storage_file.write(data_row)
                         dipole_count += 1
-                        if graph is True:
+                        if self.graph is True:
                             ax.scatter(x, final_y, final_z, c='b')
-        if graph is True:
+        if self.graph is True:
             plt.show()
         storage_file.close()
         storage_file = open('cube_storage.pos', 'r')
