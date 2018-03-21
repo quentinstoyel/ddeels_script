@@ -11,5 +11,7 @@ Then you can run "ddeels.exe < ddeels.in" and gnuplot ag_cube.gnu to get the pic
 
 
 Quirks from hard coding stuff/Features coming soon:
+
 Only designed to work for single element samples
+
 Impars are placed at midpoint of a side and on corner. 
