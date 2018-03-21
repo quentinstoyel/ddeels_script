@@ -73,7 +73,7 @@ def main(argv):
         elif opt in ("-g", "--graph"):
             graph = arg == 'True'
     x = Ddeels_rounded_cube(dimension, roundedness,
-                            dipoles, angle, ratio, filename)
+                            dipoles, angle, ratio, filename,graph)
     x.initialize_files_for_ddeels()
 
 
