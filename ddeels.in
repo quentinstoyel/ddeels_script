@@ -1,0 +1,44 @@
++------------------------------------------+
+| INPUT FILE FOR ddeels.exe | VERSION: 2.1 |
++------------------------------------------+
+!--- MODE ---!
+map spectrum		 	! [mode]: to compute spectrum or map
+!--- ENERGIES ---!
+  3.5   4.0   100		! [EnLoss_min], [EnLoss_max], [n_EnLoss]
+100.00                    	! [InChEn]: Incident Charge Energy [keV]
+!--- POSITION FILES ---!
+ag_cube.pos			! [DipPos_f]: Dipole Position file
+imppar.dat                	! [ImpPar_f]: Impact Parameter file 
+!--- DIPOLE TYPES ---!
+CM				! [PolTyp]  : Polarizability Type (ANISO, ..., CM)
+dxtype.dat                	! [DxType_f]: file with cell types, i.e. dx(1:3,?)
+1                           	! [n_DieFun]: number of Dielectric Function file(s)
+'Ag_Palik_eps.dat'
+!--- PROPAGATOR ---!
+FR				! [propTyp]: Propagator type (FR, NR)
+!--- CATHODOLUMINESCENCE ---!
+.true. .false.			! [CL_L]: .true. to compute CL
+50000.0                   	! [sphereRadius]: radius of the integration sphere in [Ang]
+0.0 0.0 0.0               	! [sphereCenter]: coord. of center of the sphere in [Ang]
+50 50                     	! [n_Theta], [n_Phi]: number of [Theta] and [Phi] angles 
+!--- SUBSRATE ---!
+.false. .true.			! [sub_L] : .true. if there is a S.-I. substrate
+xy			  	! [SubPlane] : plane containing the interface
+-0.50                     	! [SubDist] : position [Ang] of the S.-I. substrate
+DFCSTT                    	! [SubMet]: Substrate Method (DFCSTT, DFFILE, ...)
+2.25                      	! [DF_sub]: if DFCSTT: substrate Dielectric ConSTanT
+1                         	! [i_sub] : if DFFILE: substrate
+!--- MAP BOX ---!
+-15.0 75.0 100			! [x_min], [x_max], [n_x]: x coord. of the MAP BOX in [Ang]
+-15.0 75.0 100			! [y_min], [y_max], [n_y]: y coord. of the MAP BOX in [Ang]
+!--- INVERSION METHOD ---!
+CGMI CSYSV			! [InvMet]: Inversion Method (CGMI,CSYSV, ...)
+1.0E-4                    	! [CG_tol]: if CGMI: tolerance
+!--- OUTPUT FILE(S) ---!
+.true.  .false.			! [OutDip_L]   : .true. for saving dipoles in a file
+ag_cube                      	! [OutFileRoot]: Output File Root
++-----+
+| END |
++-----+
+(1.0,0.0) (1.0,0.0) (0.0,0.0)	! pol-vector for Extinction [-iwe option in command line]
+0.0 0.0 1.0			! k-vector for Extinction [-iwe option in command line]
