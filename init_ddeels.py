@@ -2,6 +2,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from scipy.spatial import ConvexHull
 
 
 import sys
@@ -19,7 +20,7 @@ def main(argv):
     filename = "ag_cube"
     try:
         opts, args = getopt.getopt(argv, "hs:d:r:a:R:n:g:", [
-                                   "size=", "dipole=", "roundedness=", 'angle=', "Ratio=", "filename=","graph="])
+                                   "size=", "dipole=", "roundedness=", 'angle=', "Ratio=", "filename=", "graph="])
     except getopt.GetoptError:
         print 'init_ddeels.py -s <size> -d <dipole> -r <roundedness> -a <angle> -R <Ratio> -g <graph> \n \n'
         print 'This script generates the .pos, impar.dat and dx files for DDEELS and prints the actual number of dipoles in the final structure'
@@ -52,7 +53,6 @@ def main(argv):
             print
             print 'END HELP'
 
-
             sys.exit()
         elif opt in ("-s", "--size"):
             dimension = float(arg)
@@ -73,12 +73,11 @@ def main(argv):
         elif opt in ("-g", "--graph"):
             graph = arg == 'True'
     x = Ddeels_rounded_cube(dimension, roundedness,
-                            dipoles, angle, ratio, filename,graph)
+                            dipoles, angle, ratio, filename, graph)
     x.initialize_files_for_ddeels()
 
 
-
-def to_precision(x,p):
+def to_precision(x, p):
     """
     returns a string representation of x formatted with a precision of p
 
@@ -89,7 +88,7 @@ def to_precision(x,p):
     x = float(x)
 
     if x == 0.:
-        return "0." + "0"*(p-1)
+        return "0." + "0" * (p - 1)
 
     out = []
 
@@ -99,17 +98,17 @@ def to_precision(x,p):
 
     e = int(math.log10(x))
     tens = math.pow(10, e - p + 1)
-    n = math.floor(x/tens)
+    n = math.floor(x / tens)
 
     if n < math.pow(10, p - 1):
-        e = e -1
-        tens = math.pow(10, e - p+1)
+        e = e - 1
+        tens = math.pow(10, e - p + 1)
         n = math.floor(x / tens)
 
-    if abs((n + 1.) * tens - x) <= abs(n * tens -x):
+    if abs((n + 1.) * tens - x) <= abs(n * tens - x):
         n = n + 1
 
-    if n >= math.pow(10,p):
+    if n >= math.pow(10, p):
         n = n / 10.
         e = e + 1
 
@@ -124,28 +123,28 @@ def to_precision(x,p):
         if e > 0:
             out.append("+")
         out.append(str(e))
-    elif e == (p -1):
+    elif e == (p - 1):
         out.append(m)
     elif e >= 0:
-        out.append(m[:e+1])
-        if e+1 < len(m):
+        out.append(m[:e + 1])
+        if e + 1 < len(m):
             out.append(".")
-            out.extend(m[e+1:])
+            out.extend(m[e + 1:])
     else:
         out.append("0.")
-        out.extend(["0"]*-(e+1))
+        out.extend(["0"] * -(e + 1))
         out.append(m)
 
     return "".join(out)
 
 
-
-
 class Ddeels_rounded_cube:
 
     def __init__(self, dimension, roundedness, max_number_of_dipoles, angle, ratio, filename, graph):
-        self.rotation_angle = angle #initializing everything to the class
-        self.exp_factor = 2.0 / roundedness #centers the cube at origin
+        self.rotation_angle = angle  # initializing everything to the class
+        self.exp_factor = 2.0 / roundedness  # centers the cube at origin
+
+        self.dimension = dimension
         self.max_value = dimension / 2.0
         self.ratio = ratio
         self.step_size = dimension / (float(max_number_of_dipoles)**(1.0 / 3))
@@ -168,6 +167,20 @@ class Ddeels_rounded_cube:
         elif coordinate_value <= 0:
             return True
 
+    def D20_shape(self, x, y, z):
+        # function that returns True/False based on whether or not the given point is inside a 20 sided icosehedron,
+        # with a vertex-vertex dimension given by dimension
+        phi = (1 + np.sqrt(5)) * 0.5  # golden ratio
+        vertices = (self.dimension / 3.0) * np.array([[0, 1, phi], [0, -1, phi], [0, 1, -phi], [0, -1, -phi],
+                                                      [phi, 0, 1], [
+                                                          phi, 0, -1], [-phi, 0, 1], [-phi, 0, -1],
+                                                      [1, phi, 0], [-1, phi, 0], [1, -phi, 0], [-1, -phi, 0], [0, 0, 0]])
+                                                      #the vertices of a D20...
+        hull = ConvexHull(vertices)
+        new_vertices = np.append(vertices, [[x, y, z]], axis=0) #adds point in quesiton to the hull
+        new_hull = ConvexHull(new_vertices)
+        return np.array_equal(new_hull.vertices, hull.vertices) #checks if new hull is the same as the old hull
+
     def make_rotation_matrix(self, angle):
         angle = angle
         # define rotation matrix around x axis, in degrees:
@@ -181,18 +194,19 @@ class Ddeels_rounded_cube:
         storage_file = open('cube_storage.pos', 'w')
         dipole_count = 0  # counter to make sure we know how many dipoles we have
         self.make_rotation_matrix(self.rotation_angle)  # if tilting
-        if self.graph is True: #does this output a graph?
+        if self.graph is True:  # does this output a graph?
             fig = plt.figure()
             ax = fig.add_subplot(111, projection='3d')
         for x in self.x_values:
             for y in self.y_values:
                 for z in self.z_values:
                     # if the point x,y,z is in the shape
-                    if self.function_3d_shape(x, y, z) == True:
+                    #if self.function_3d_shape(x, y, z) == True:
+                    if self.D20_shape(x, y, z) == True:
                         final_y, final_z = np.array(
                             np.matmul(self.rotation_matrix, [y, z]))[0]  # rotate around x
                         data_row = "   " + str(to_precision(x, 8)) + "        " + str(to_precision(
-                            final_y, 8)) + "         " + str(to_precision(final_z, 8)) + "       1           1 \n" #what to write to file
+                            final_y, 8)) + "         " + str(to_precision(final_z, 8)) + "       1           1 \n"  # what to write to file
                         storage_file.write(data_row)
                         dipole_count += 1
                         if self.graph is True:
@@ -203,7 +217,7 @@ class Ddeels_rounded_cube:
         storage_file = open('cube_storage.pos', 'r')
         print dipole_count
         cube_file = open(self.filename + "_" +
-                         str(self.rotation_angle) + '.pos', 'w') #writes the header with the right number of dipoles
+                         str(self.rotation_angle) + '.pos', 'w')  # writes the header with the right number of dipoles
         cube_file.write('#' + str(dipole_count) + '\n')
         cube_file.write("#" + str(dipole_count) +
                         " dipole ag rounded cube from nicoletti paper \n")
@@ -215,7 +229,7 @@ class Ddeels_rounded_cube:
         return
 
     def write_impar_file(self):
-        #sticks impar on midpoint of side and on corner of shape, based of max values
+        # sticks impar on midpoint of side and on corner of shape, based of max values
         impar_file = open("impar.dat", 'w')
         impar_file.write(
             '# 2 \n # comment: in [Ang]\n#       x(i)        y(i)\n')
@@ -234,7 +248,7 @@ class Ddeels_rounded_cube:
         dx_file.close()
 
     def initialize_files_for_ddeels(self):
-        #runs everything in the right order
+        # runs everything in the right order
         self.write_impar_file()
         self.write_cube()
         self.write_dx_file()
